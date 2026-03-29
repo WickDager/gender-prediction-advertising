@@ -1,0 +1,26 @@
+# Data files (keep only README in data/)
+*.csv
+*.xlsx
+*.parquet
+data/*
+
+# Python cache
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+
+# IDE
+.vscode/
+.idea/
+
+# Model files (optional – if you want to store them with Git LFS, but here we push them)
+# *.pkl
+# *.joblib
+
+# Jupyter notebook outputs (optional – keep if you want to version notebooks)
+# *.ipynb
+
+# Environment
+.env
+venv/
+env/
