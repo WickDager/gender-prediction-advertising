@@ -10,6 +10,7 @@ from user_agents import parse
 from sklearn.impute import SimpleImputer
 from sklearn.preprocessing import LabelEncoder
 import os
+import sys
 
 # Paths to model files (update as needed)
 MODEL_PATH = os.path.join(os.path.dirname(__file__), '..', 'models', 'gender_classifier.pkl')
@@ -23,8 +24,12 @@ def load_model():
     """Load the trained model and imputer (cached)."""
     global _model, _imputer
     if _model is None:
-        _model = joblib.load(MODEL_PATH)
-        _imputer = joblib.load(IMPUTER_PATH)
+        try:
+            _model = joblib.load(MODEL_PATH)
+            _imputer = joblib.load(IMPUTER_PATH)
+        except FileNotFoundError:
+            print(f"Model files not found. Expected:\n  {MODEL_PATH}\n  {IMPUTER_PATH}")
+            sys.exit(1)
     return _model, _imputer
 
 def parse_user_agent(ua_string):
@@ -154,12 +159,29 @@ def predict_gender(raw_df, referer_vectors, geo_info):
     result = pd.DataFrame({'user_id': agg_df['user_id'], 'target': preds})
     return result
 
-# Example usage (commented out)
+# ===================================================
+# Safe test block (optional – run only if data exists)
+# ===================================================
 if __name__ == "__main__":
-    # Load data
-    train_data = pd.read_csv('../data/train.csv', sep=';')
-    referer = pd.read_csv('../data/referer_vectors.csv', sep=';')
-    geo = pd.read_csv('../data/geo_info.csv', sep=';')
+    # Define paths
+    data_dir = os.path.join(os.path.dirname(__file__), '..', 'data')
+    train_path = os.path.join(data_dir, 'train.csv')
+    referer_path = os.path.join(data_dir, 'referer_vectors.csv')
+    geo_path = os.path.join(data_dir, 'geo_info.csv')
     
+    # Check if data files exist
+    if not (os.path.exists(train_path) and os.path.exists(referer_path) and os.path.exists(geo_path)):
+        print("Test data not found. Please place train.csv, referer_vectors.csv, and geo_info.csv in the 'data/' folder.")
+        print("Skipping test block.")
+        sys.exit(0)
+    
+    # Load data
+    print("Loading test data...")
+    train_data = pd.read_csv(train_path, sep=';')
+    referer = pd.read_csv(referer_path, sep=';')
+    geo = pd.read_csv(geo_path, sep=';')
+    
+    # Run prediction on first 100 rows as a quick test
+    print("Running prediction on first 100 rows...")
     pred_df = predict_gender(train_data.head(100), referer, geo)
     print(pred_df.head())
